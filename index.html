@@ -1,0 +1,488 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sydney Travel Book Completo</title>
+<style>
+body{font-family:'Segoe UI',Arial,sans-serif;background:#eef6fb;margin:0;color:#2d3748;padding-bottom:30px}
+.header{background:linear-gradient(135deg,#1e3a5f,#0ea5e9);color:#fff;padding:40px 20px;text-align:center}
+.container{max-width:1000px;margin:auto;padding:20px}
+
+/* --- Estilos del Clima Automatizado en 2 Filas --- */
+.weather-container {
+    max-width: 650px;
+    margin: 20px auto 0 auto;
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+.weather-today-box {
+    background: rgba(255, 255, 255, 0.2);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    border-radius: 14px;
+    backdrop-filter: blur(5px);
+    padding: 15px;
+}
+.today-summary {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+    padding-bottom: 12px;
+    margin-bottom: 12px;
+}
+.today-main { text-align: left; }
+.today-title { font-size: 0.85em; text-transform: uppercase; letter-spacing: 1px; opacity: 0.9; }
+.today-temp { font-size: 2.2em; font-weight: bold; margin: 2px 0; }
+.today-desc { font-size: 1em; font-weight: 500; }
+.today-details { text-align: right; font-size: 0.85em; opacity: 0.9; line-height: 1.4; }
+
+.hourly-scroll {
+    display: flex;
+    gap: 15px;
+    overflow-x: auto;
+    padding-bottom: 8px;
+}
+.hourly-scroll::-webkit-scrollbar { height: 6px; }
+.hourly-scroll::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.4); border-radius: 4px; }
+.hourly-item { min-width: 60px; text-align: center; font-size: 0.85em; }
+.hourly-time { opacity: 0.8; margin-bottom: 3px; }
+.hourly-icon { font-size: 1.2em; margin: 2px 0; }
+.hourly-temp { font-weight: bold; }
+
+.weather-forecast {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+}
+.forecast-card {
+    background: rgba(255, 255, 255, 0.15);
+    padding: 12px;
+    border-radius: 10px;
+    flex: 1;
+    backdrop-filter: blur(5px);
+}
+.forecast-day { font-weight: bold; font-size: 0.85em; text-transform: uppercase; margin-bottom: 4px; }
+.forecast-temp { font-size: 1.1em; font-weight: bold; }
+.forecast-desc { font-size: 0.8em; opacity: 0.85; }
+.loading { opacity: 0.7; font-style: italic; }
+
+/* --- Estilos de las Tarjetas de Itinerarios --- */
+details {background:#fff;border-radius:16px;margin-bottom:20px;box-shadow:0 4px 12px rgba(0,0,0,0.08);overflow:hidden;border:none}
+summary {cursor:pointer;list-style:none}
+summary::-webkit-details-marker {display: none;}
+
+.summary-content {
+    padding: 18px;
+    background: linear-gradient(135deg,#0ea5e9,#38bdf8);
+    color: white;
+    font-weight: bold;
+    font-size: 1.15em;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+.summary-text { text-align: left; }
+.summary-sub { font-size: 0.8em; font-weight: normal; opacity: 0.9; margin-top: 2px; }
+
+/* Botones y Links */
+.route-btn {
+    display: inline-block;
+    padding: 8px 14px;
+    background: white;
+    color: #0ea5e9;
+    border-radius: 10px;
+    text-decoration: none;
+    font-weight: bold;
+    font-size: 0.85em;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+    transition: transform 0.2s;
+}
+.route-btn:hover { transform: translateY(-1px); }
+
+/* Bloques Internos */
+.card-inner { padding: 25px; }
+.day-meta-tags {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-bottom: 20px;
+    border-bottom: 1px dashed #cbd5e1;
+    padding-bottom: 15px;
+}
+.meta-tag-item {
+    background: #e0f2fe;
+    color: #0369a1;
+    padding: 4px 10px;
+    border-radius: 6px;
+    font-size: 0.85em;
+    font-weight: 500;
+}
+
+.itinerary-block {
+    margin-bottom: 22px;
+    background: #f8fafc;
+    padding: 15px;
+    border-radius: 12px;
+    border-left: 4px solid #0ea5e9;
+}
+.block-label {
+    font-weight: bold;
+    color: #1e3a5f;
+    font-size: 1em;
+    margin-bottom: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+.detail-line {
+    margin-bottom: 8px;
+    font-size: 0.95em;
+    line-height: 1.5;
+}
+.detail-line:last-child { margin-bottom: 0; }
+.time {
+    background: #0ea5e9;
+    color: white;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-weight: bold;
+    font-size: 0.85em;
+    margin-right: 8px;
+}
+.detail-line a {
+    color: #0284c7;
+    text-decoration: none;
+    font-weight: 600;
+}
+.detail-line a:hover { text-decoration: underline; }
+
+/* Footer de las tarjetas */
+.card-footer {
+    margin-top: 15px;
+    padding-top: 15px;
+    border-top: 1px dashed #cbd5e1;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+.tags-group { display: flex; gap: 8px; flex-wrap: wrap; }
+.footer-tag {
+    background: #f1f5f9;
+    color: #475569;
+    padding: 3px 8px;
+    border-radius: 5px;
+    font-size: 0.8em;
+}
+</style>
+</head>
+<body>
+
+<div class="header">
+<h1>🌏 Sydney Travel Book</h1>
+<p>Guía completa interactiva</p>
+
+<!-- Contenedor del Clima Dinámico -->
+<div class="weather-container" id="weather-app">
+    <p class="loading">Cargando clima en tiempo real...</p>
+</div>
+</div>
+
+<div class="container">
+
+<!-- ================= DÍA 1 ================= -->
+<details open>
+<summary>
+<div class="summary-content">
+    <div class="summary-text">
+        Día 1 · Introducción icónica
+        <div class="summary-sub">Circular Quay · Opera · Manly</div>
+    </div>
+    <a class="route-btn" target="_blank" href="https://www.google.com/maps/dir/Circular+Quay/Sydney+Opera+House/Royal+Botanic+Garden/Mrs+Macquaries+Chair/The+Rocks">🗺 Abrir ruta</a>
+</div>
+</summary>
+<div class="card-inner">
+    <div class="day-meta-tags">
+        <span class="meta-tag-item">📍 Circular Quay</span>
+        <span class="meta-tag-item">🎭 Opera House</span>
+        <span class="meta-tag-item">🌿 Botanic Garden</span>
+        <span class="meta-tag-item">🏛 The Rocks</span>
+        <span class="meta-tag-item">⛴ Manly</span>
+    </div>
+
+    <div class="itinerary-block">
+        <div class="block-label">🌅 Mañana (Relax + vistas)</div>
+        <div class="detail-line"><span class="time">10:00</span><a href="https://www.google.com/maps/place/Circular+Quay" target="_blank">Circular Quay</a> – primeras vistas del puerto</div>
+        <div class="detail-line"><span class="time">10:30</span><a href="https://www.google.com/maps/place/Opera+Bar+Sydney" target="_blank">Opera Bar</a> – brunch relajado</div>
+        <div class="detail-line"><span class="time">11:30</span><a href="https://www.google.com/maps/place/Sydney+Opera+House" target="_blank">Opera House</a> – recorrido exterior</div>
+    </div>
+
+    <div class="itinerary-block">
+        <div class="block-label">☀️ Tarde</div>
+        <div class="detail-line"><span class="time">12:30</span><a href="https://www.google.com/maps/place/Royal+Botanic+Garden+Sydney" target="_blank">Botanic Garden</a> – paseo con vistas</div>
+        <div class="detail-line"><span class="time">13:15</span><a href="https://www.google.com/maps/place/Mrs+Macquaries+Chair" target="_blank">Mrs Macquarie’s Chair</a> – mejor foto</div>
+        <div class="detail-line"><span class="time">14:30</span>Regreso hacia Circular Quay</div>
+        <div class="detail-line"><span class="time">15:30</span><a href="https://www.google.com/maps/place/The+Rocks+Sydney" target="_blank">The Rocks</a> – calles históricas + café</div>
+    </div>
+
+    <div class="itinerary-block">
+        <div class="block-label">🌅 Atardecer (Manly)</div>
+        <div class="detail-line"><span class="time">17:30</span>Ferry desde Circular Quay</div>
+        <div class="detail-line"><span class="time">18:10</span>Llegada a Manly</div>
+        <div class="detail-line"><span class="time">18:30</span>Playa + atardecer</div>
+        <div class="detail-line"><span class="time">19:30</span>Regreso o cena en Manly</div>
+    </div>
+
+    <div class="itinerary-block">
+        <div class="block-label">🌙 Noche</div>
+        <div class="detail-line"><span class="time">20:30</span>Cena en Barangaroo / Circular Quay</div>
+    </div>
+
+    <div class="card-footer">
+        <div class="tags-group">
+            <span class="footer-tag">💙 Luna de miel</span>
+            <span class="footer-tag">🚶 Caminable</span>
+            <span class="footer-tag">📸 Fotogénico</span>
+        </div>
+        <a class="route-btn" style="background:#0ea5e9; color:white;" target="_blank" href="https://www.google.com/maps/dir/Circular+Quay/Sydney+Opera+House/Royal+Botanic+Garden/Mrs+Macquaries+Chair/The+Rocks">Abrir ruta en Maps</a>
+    </div>
+</div>
+</details>
+
+<!-- ================= DÍA 2 ================= -->
+<details>
+<summary>
+<div class="summary-content">
+    <div class="summary-text">
+        Día 2 · Naturaleza + fauna
+        <div class="summary-sub">Featherdale · Blue Mountains</div>
+    </div>
+    <a class="route-btn" target="_blank" href="https://www.google.com/maps/dir/Sydney/Featherdale+Wildlife+Park/Katoomba+NSW">🗺 Abrir ruta</a>
+</div>
+</summary>
+<div class="card-inner">
+    <div class="day-meta-tags">
+        <span class="meta-tag-item">koala:🐨 Featherdale</span>
+        <span class="meta-tag-item">🌿 Blue Mountains</span>
+        <span class="meta-tag-item">📸 Miradores</span>
+    </div>
+
+    <div class="itinerary-block" style="border-left-color: #65a30d;">
+        <div class="block-label" style="color: #3f6212;">🚗 Logística de Transporte del día</div>
+        <div class="detail-line"><strong>✅ Opción Auto alquilado:</strong></div>
+        <div class="detail-line">Sydney → Featherdale (45 min) | Featherdale → Blue Mountains (1h15) | Blue Mountains → Sydney (1h30–1h45)</div>
+        <div class="detail-line" style="color:#16a34a">💰 Costo estimado: 100–140 AUD pareja</div>
+        <br>
+        <div class="detail-line"><strong>🚆 Opción Transporte público:</strong></div>
+        <div class="detail-line">1️⃣ Tren Sydney → Blacktown (50–60 min) | 2️⃣ Bus 729 → Featherdale (10–15 min) | 3️⃣ Bus → Blacktown (10–15 min) | 4️⃣ Tren Blacktown → Katoomba (1h45–2h) | 5️⃣ Bus/caminata en Blue Mountains (15–30 min) | 6️⃣ Tren Katoomba → Sydney (1h45–2h)</div>
+        <div class="detail-line" style="color:#16a34a">💰 Costo estimado: 40–60 AUD pareja</div>
+        <div class="detail-line" style="color:#dc2626">⚠️ Total traslados: ~3.5–4.5 hs en el día</div>
+    </div>
+
+    <div class="itinerary-block">
+        <div class="block-label">🌅 Mañana (Exploración)</div>
+        <div class="detail-line"><span class="time">08:00</span>Salida de Sydney</div>
+        <div class="detail-line"><span class="time">09:00</span>Llegada a Featherdale Wildlife Park</div>
+        <div class="detail-line"><span class="time">10:30</span>Salida hacia Blue Mountains</div>
+    </div>
+
+    <div class="itinerary-block">
+        <div class="block-label">☀️ Tarde</div>
+        <div class="detail-line"><span class="time">12:00</span>Mirador Echo Point (Las Tres Hermanas)</div>
+        <div class="detail-line"><span class="time">13:30</span>Almuerzo en el pueblo de Leura</div>
+        <div class="detail-line"><span class="time">15:00</span>Recorrido por miradores secundarios</div>
+    </div>
+
+    <div class="itinerary-block">
+        <div class="block-label">🌙 Regreso</div>
+        <div class="detail-line"><span class="time">17:00</span>Salida de regreso</div>
+        <div class="detail-line"><span class="time">19:00</span>Llegada a Sydney centro</div>
+    </div>
+
+    <div class="card-footer">
+        <div class="tags-group">
+            <span class="footer-tag">🌿 Naturaleza</span>
+            <span class="footer-tag">🐨 Fauna</span>
+            <span class="footer-tag">🚗 Roadtrip</span>
+        </div>
+        <a class="route-btn" style="background:#0ea5e9; color:white;" target="_blank" href="https://www.google.com/maps/dir/Sydney/Featherdale+Wildlife+Park/Katoomba+NSW">Abrir ruta en Maps</a>
+    </div>
+</div>
+</details>
+
+<!-- ================= DÍA 3 ================= -->
+<details>
+<summary>
+<div class="summary-content">
+    <div class="summary-text">
+        Día 3 · Playa + Walk + Cierre
+        <div class="summary-sub">Bondi · Coastal Walk · Coogee</div>
+    </div>
+    <a class="route-btn" target="_blank" href="https://www.google.com/maps/dir/Bondi+Beach,+NSW,+Australia/Bondi+Icebergs,+NSW,+Australia/Mackenzies+Point,+NSW,+Australia/Tamarama+Beach,+NSW,+Australia/Bronte+Beach,+NSW,+Australia/Clovelly+Beach,+NSW,+Australia/Coogee+Beach,+NSW,+Australia">🗺 Abrir ruta</a>
+</div>
+</summary>
+<div class="card-inner">
+    <div class="day-meta-tags">
+        <span class="meta-tag-item">🏖 Bondi Beach</span>
+        <span class="meta-tag-item">🏃 Coastal Walk</span>
+        <span class="meta-tag-item">🥑 Comida Local</span>
+    </div>
+
+    <div class="itinerary-block" style="border-left-color:#ea580c">
+        <div class="block-label" style="color:#c2410c">🚍 Traslado inicial e ida</div>
+        <div class="detail-line">Bus desde el centro → Bondi Beach (35–45 min): 💰 8–12 AUD pareja</div>
+        <div class="detail-line">Opción alternativa Uber: 💰 25–40 AUD</div>
+    </div>
+
+    <div class="itinerary-block">
+        <div class="block-label">🌅 Mañana</div>
+        <div class="detail-line"><span class="time">09:30</span>Llegada a Bondi Beach</div>
+        <div class="detail-line"><span class="time">10:00</span>Paseo relajado + café frente a la playa</div>
+        <div class="detail-line"><span class="time">11:00</span>Inicio del sendero escénico Coastal Walk</div>
+    </div>
+
+    <div class="itinerary-block">
+        <div class="block-label">☀️ Mediodía</div>
+        <div class="detail-line"><span class="time">12:00</span>Paso por Bahía Tamarama</div>
+        <div class="detail-line"><span class="time">12:30</span>Llegada a Brontë Beach</div>
+        <div class="detail-line"><span class="time">13:00</span>Tiempo de descanso y relax</div>
+    </div>
+
+    <div class="itinerary-block" style="border-left-color: #e11d48">
+        <div class="block-label" style="color:#be123c">🍽 Opciones de Almuerzo (Gastronomía local)</div>
+        <div class="detail-line"><strong>🐟 Fish & Chips (Bondi’s Best Fish):</strong> Clásico imperdible australiano frente al mar. 💰 35–60 AUD pareja.</div>
+        <div class="detail-line"><strong>🥑 Bills Bondi:</strong> Cocina aussie moderna con los típicos platos de brunch. 💰 50–80 AUD pareja.</div>
+        <div class="detail-line"><strong>🍔 North Bondi RSL:</strong> Club pub local ideal para schnitzels o hamburguesas. 💰 40–70 AUD pareja.</div>
+        <div class="detail-line"><strong>🥟 Opciones multiculturales:</strong> Platos fusión asiáticos / healthy bowls (muy icónicos de Sydney). 💰 40–70 AUD pareja.</div>
+    </div>
+
+    <div class="itinerary-block">
+        <div class="block-label">🏃 Variante Extendida (Recomendada si hay tiempo)</div>
+        <div class="detail-line"><strong>Ruta Completa: Bondi → Tamarama → Brontë → Clovelly → Coogee</strong></div>
+        <div class="detail-line">📏 Distancia: ~6 km | ⏱ Tiempo caminando: 1.5–2.5 horas total (+45-60 min respecto al plan base).</div>
+        <div class="detail-line">🚍 Regreso directo en bus desde Coogee al centro: 35–50 min (Costo: 8–12 AUD pareja). *Nota: Cambia la logística porque no vuelves a Bondi.</div>
+    </div>
+
+    <div class="itinerary-block">
+        <div class="block-label">🌙 Tarde y Despedida</div>
+        <div class="detail-line"><span class="time">16:30</span>Paseo final por la zona costera</div>
+        <div class="detail-line"><span class="time">17:30</span>Regreso para organizar equipaje</div>
+    </div>
+
+    <div class="itinerary-block" style="border-left-color:#475569">
+        <div class="block-label" style="color:#334155">✈️ Logística de Salida - Traslado al Aeropuerto</div>
+        <div class="detail-line"><strong>🚆 Tren de línea:</strong> Trayecto de 15–20 min | 💰 ~40 AUD pareja.</div>
+        <div class="detail-line"><strong>🚗 Uber / Taxi:</strong> Trayecto de 20–30 min | 💰 40–60 AUD.</div>
+        <div class="detail-line" style="font-weight:600; color:#e11d48">🕒 Recomendación horaria: Emprender salida hacia el aeropuerto a las ~17:45 hs.</div>
+    </div>
+
+    <div class="card-footer">
+        <div class="tags-group">
+            <span class="footer-tag">🏖️ Playa</span>
+            <span class="footer-tag">🏃 Walk</span>
+            <span class="footer-tag">✈️ Fin del viaje</span>
+        </div>
+        <a class="route-btn" style="background:#0ea5e9; color:white;" target="_blank" href="https://www.google.com/maps/dir/Bondi+Beach,+NSW,+Australia/Bondi+Icebergs,+NSW,+Australia/Mackenzies+Point,+NSW,+Australia/Tamarama+Beach,+NSW,+Australia/Bronte+Beach,+NSW,+Australia/Clovelly+Beach,+NSW,+Australia/Coogee+Beach,+NSW,+Australia">Abrir ruta en Maps</a>
+    </div>
+</div>
+</details>
+
+</div>
+
+<!-- Script de conexión a la API Open-Meteo -->
+<script>
+function getWeatherInfo(code) {
+    if (code === 0) return { desc: 'Despejado', icon: '☀️' };
+    if ([1, 2, 3].includes(code)) return { desc: 'Parcialmente nublado', icon: '⛅' };
+    if ([45, 48].includes(code)) return { desc: 'Niebla', icon: '🌫️' };
+    if ([51, 53, 55, 61, 63, 65, 80, 81, 82].includes(code)) return { desc: 'Lluvia', icon: '🌧️' };
+    if ([71, 73, 75, 85, 86].includes(code)) return { desc: 'Nieve', icon: '❄️' };
+    if ([95, 96, 99].includes(code)) return { desc: 'Tormenta', icon: '⛈️' };
+    return { desc: 'Nublado', icon: '☁️' };
+}
+
+async function fetchWeather() {
+    const url = "https://api.open-meteo.com/v1/forecast?latitude=-33.8678&longitude=151.2073&current=temperature_2m,relative_humidity_2m,weather_code,wind_speed_10m&hourly=temperature_2m,weather_code&daily=weather_code,temperature_2m_max,temperature_2m_min&timezone=Australia%2FSydney&forecast_days=4";
+    
+    try {
+        const response = await fetch(url);
+        const data = await response.json();
+        
+        const currentInfo = getWeatherInfo(data.current.weather_code);
+        const currentTemp = Math.round(data.current.temperature_2m);
+        const maxToday = Math.round(data.daily.temperature_2m_max[0]);
+        const minToday = Math.round(data.daily.temperature_2m_min[0]);
+        
+        const currentHourIndex = new Date().toLocaleTimeString("en-US", {timeZone: "Australia/Sydney", hour12: false}).split(':')[0];
+        let hourlyHTML = '';
+        const startIndex = data.hourly.time.findIndex(t => t.includes(`T${currentHourIndex}:00`)) || 0;
+        
+        for(let i = startIndex; i < startIndex + 8; i++) {
+            if(!data.hourly.time[i]) break;
+            const hourStr = data.hourly.time[i].split('T')[1].substring(0, 5);
+            const hInfo = getWeatherInfo(data.hourly.weather_code[i]);
+            const hTemp = Math.round(data.hourly.temperature_2m[i]);
+            hourlyHTML += `
+                <div class="hourly-item">
+                    <div class="hourly-time">${hourStr}</div>
+                    <div class="hourly-icon">${hInfo.icon}</div>
+                    <div class="hourly-temp">${hTemp}°</div>
+                </div>
+            `;
+        }
+
+        let forecastHTML = '';
+        const diasSemana = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
+        
+        for(let i = 1; i <= 3; i++) {
+            const dateObj = new Date(data.daily.time[i] + "T00:00:00");
+            const dayName = diasSemana[dateObj.getDay()];
+            const dInfo = getWeatherInfo(data.daily.weather_code[i]);
+            const dMax = Math.round(data.daily.temperature_2m_max[i]);
+            const dMin = Math.round(data.daily.temperature_2m_min[i]);
+            
+            forecastHTML += `
+                <div class="forecast-card">
+                    <div class="forecast-day">${dayName} ${dInfo.icon}</div>
+                    <div class="forecast-temp">${dMax}° / ${dMin}°</div>
+                    <div class="forecast-desc">${dInfo.desc}</div>
+                </div>
+            `;
+        }
+
+        document.getElementById('weather-app').innerHTML = `
+            <div class="weather-today-box">
+                <div class="today-summary">
+                    <div class="today-main">
+                        <div class="today-title">Hoy en Sydney ${currentInfo.icon}</div>
+                        <div class="today-temp">${currentTemp}°C</div>
+                        <div class="today-desc">${currentInfo.desc}</div>
+                    </div>
+                    <div class="today-details">
+                        <div>Máx: ${maxToday}° / Mín: ${minToday}°</div>
+                        <div>Humedad: ${data.current.relative_humidity_2m}%</div>
+                        <div>Viento: ${Math.round(data.current.wind_speed_10m)} km/h</div>
+                    </div>
+                </div>
+                <div class="hourly-scroll">
+                    ${hourlyHTML}
+                </div>
+            </div>
+            <div class="weather-forecast">
+                ${forecastHTML}
+            </div>
+        `;
+    } catch (error) {
+        console.error("Error cargando el clima:", error);
+        document.getElementById('weather-app').innerHTML = `<p class="loading">No se pudo cargar el clima en tiempo real.</p>`;
+    }
+}
+
+fetchWeather();
+</script>
+</body>
+</html>
